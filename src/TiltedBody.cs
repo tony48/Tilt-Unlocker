@@ -9,6 +9,7 @@ using Kopernicus;
 using Kopernicus.Components;
 using Kopernicus.Configuration;
 using Kopernicus.Constants;
+using Kopernicus.RuntimeUtility;
 
 using UnityEngine.SceneManagement;
 
@@ -18,16 +19,16 @@ namespace TiltUnlocker
     public class TiltedBody : MonoBehaviour
     {
         public GameObject ScaledTiltedBody { get; private set; }
+        public MeshRenderer ScaledTiltedMR;
         public GameObject ScaledBody { get; private set; }
+        private MeshRenderer OriginalScaledRenderer;
 
         public CelestialBody Body { get; private set; }
 
         public Double Obliquity = 0.0F;
         public Double RightAscension = 0.0F;
 
-        private MeshRenderer OriginalScaledRenderer;
-        private Material TiltedScaledMaterial;
-        private Material ScaledMaterial;
+        
 
         public BodyTypes Type;
 
@@ -67,7 +68,7 @@ namespace TiltUnlocker
             }
             else
             {
-                if (this.Body.scaledBody.GetComponent<Kopernicus.RuntimeUtility.StarComponent>())
+                if (this.Body.scaledBody.GetComponent<StarComponent>())
                 {
                     Type = BodyTypes.Star;
                 }
@@ -90,6 +91,8 @@ namespace TiltUnlocker
             TiltManager.Bodies.Add(this);
         }
 
+        private static int MaterialSizes = 1;
+
         private void LateUpdate()
         {
             if (Type == BodyTypes.Rocky || RotationAxis == Vector3.up)
@@ -103,6 +106,7 @@ namespace TiltUnlocker
 
             if (OriginalScaledRenderer && OriginalScaledRenderer.enabled)
                 OriginalScaledRenderer.enabled = false;
+
             if(!ScaledBody)
             {
                 ScaledBody = this.Body.scaledBody;
@@ -114,12 +118,27 @@ namespace TiltUnlocker
             sb.transform.up = this.RotationAxis;
             sb.transform.Rotate(Vector3.up, angle, Space.Self);
 
-            if (ScaledMaterial == null) return;
+            UpdateMaterials();
 
-
-            Vector3 dir = (ScaledTiltedBody.transform.position - Sun.Instance.sun.scaledBody.transform.position).normalized;
+            
+            Vector3 dir = (ScaledTiltedBody.transform.position - KopernicusStar.GetNearest(this.Body).sun.scaledBody.transform.position).normalized;
             dir = ScaledTiltedBody.transform.worldToLocalMatrix * dir;
-            TiltedScaledMaterial.SetVector("_localLightDirection", dir);
+            ScaledTiltedMR.sharedMaterials[TiltManager.StockMaterialIndex].SetVector("_localLightDirection", dir);
+        }
+
+        private void UpdateMaterials()
+        {
+            int sizeOriginal = OriginalScaledRenderer.sharedMaterials.Length;
+            int sizeTilted = ScaledTiltedMR.sharedMaterials.Length;
+
+            //Debug.Log("[Tilt] " + this.Body.name + " Original: " + OriginalScaledRenderer.sharedMaterials.Length + " / Tilted: "  + ScaledTiltedMR.sharedMaterials.Length);
+            if(
+                sizeOriginal != sizeTilted || 
+                (sizeOriginal > TiltManager.ScattererMaterialIndex && sizeTilted > TiltManager.ScattererMaterialIndex && OriginalScaledRenderer.sharedMaterials[TiltManager.ScattererMaterialIndex] != ScaledTiltedMR.sharedMaterials[TiltManager.ScattererMaterialIndex])
+                )
+            {
+                ScaledTiltedMR.sharedMaterials = OriginalScaledRenderer.sharedMaterials;
+            }
         }
 
         private void OnSceneChange(Scene scene, LoadSceneMode mode)
@@ -129,10 +148,9 @@ namespace TiltUnlocker
                 MeshFilter mf = this.ScaledTiltedBody.AddComponent<MeshFilter>();
                 mf.sharedMesh = this.Body.scaledBody.GetComponent<MeshFilter>().sharedMesh;
 
-                MeshRenderer mr = this.ScaledTiltedBody.AddComponent<MeshRenderer>();
+                ScaledTiltedMR = this.ScaledTiltedBody.AddComponent<MeshRenderer>();
                 OriginalScaledRenderer = this.Body.scaledBody.GetComponent<MeshRenderer>();
-                ScaledMaterial = OriginalScaledRenderer.material;
-                mr.material = TiltedScaledMaterial = new Material(ScaledMaterial);
+                ScaledTiltedMR.sharedMaterials = OriginalScaledRenderer.sharedMaterials;
                 OriginalScaledRenderer.enabled = false;
             }
         }

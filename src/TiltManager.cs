@@ -15,6 +15,9 @@ namespace TiltUnlocker
 
         public static List<TiltedBody> Bodies { get; private set; } = new List<TiltedBody>(17);
 
+        public const int StockMaterialIndex = 0;
+        public const int ScattererMaterialIndex = 1;
+
         private void Awake()
         {
             if (Instance) Destroy(this);
@@ -23,7 +26,7 @@ namespace TiltUnlocker
             DontDestroyOnLoad(this);
         }
 
-        private void OnGUI()
+        /*private void OnGUI()
         {
             GUILayout.BeginVertical();
 
@@ -34,6 +37,6 @@ namespace TiltUnlocker
             }
 
             GUILayout.EndVertical();
-        }
+        }*/
     }
 }
