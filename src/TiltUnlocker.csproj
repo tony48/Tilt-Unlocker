@@ -36,6 +36,10 @@
       <HintPath>..\..\..\libs\1.8.1\Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>..\..\..\libs\1.8.1\Assembly-CSharp-firstpass.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Kopernicus">
       <HintPath>..\..\..\libs\1.8.1\Kopernicus.dll</HintPath>
       <Private>False</Private>
@@ -56,12 +60,20 @@
       <HintPath>..\..\..\libs\Unity 2019\UnityEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="UnityEngine.AnimationModule">
+      <HintPath>..\..\..\libs\Unity 2019\UnityEngine.AnimationModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\..\..\libs\Unity 2019\UnityEngine.CoreModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.IMGUIModule">
       <HintPath>..\..\..\libs\Unity 2019\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>..\..\..\libs\Unity 2019\UnityEngine.InputLegacyModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.UI">
@@ -75,6 +87,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BodyTypes.cs" />
+    <Compile Include="DebugDrawer.cs" />
+    <Compile Include="TiltApp.cs" />
+    <Compile Include="TiltedRenderHelper.cs" />
     <Compile Include="TiltManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TiltedBody.cs" />
