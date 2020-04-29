@@ -4,6 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using KSP.UI.Screens;
+using Kopernicus.Components;
+
+using UnityEngine.SceneManagement;
 
 namespace TiltUnlocker
 {
@@ -24,19 +28,16 @@ namespace TiltUnlocker
 
             Instance = this;
             DontDestroyOnLoad(this);
+
+            SceneManager.sceneLoaded += OnSceneChange;
         }
 
-        /*private void OnGUI()
+        private void OnSceneChange(Scene scene, LoadSceneMode mode)
         {
-            GUILayout.BeginVertical();
-
-            GUILayout.Label("Active tilted bodies: " + Bodies.Count);
-            foreach (TiltedBody tb in Bodies)
+            if(HighLogic.LoadedScene == GameScenes.FLIGHT || HighLogic.LoadedScene == GameScenes.TRACKSTATION)
             {
-                GUILayout.Label(tb.name + " " + tb.Obliquity + "°" + " => " + tb.RotationAxis);
+                Camera.main.gameObject.AddComponent<TiltedRenderHelper>();
             }
-
-            GUILayout.EndVertical();
-        }*/
+        }
     }
 }

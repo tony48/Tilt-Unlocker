@@ -11,6 +11,8 @@ using Kopernicus.Configuration;
 using Kopernicus.Constants;
 using Kopernicus.RuntimeUtility;
 
+using Kopernicus.OnDemand;
+
 using UnityEngine.SceneManagement;
 
 namespace TiltUnlocker
@@ -28,7 +30,18 @@ namespace TiltUnlocker
         public Double Obliquity = 0.0F;
         public Double RightAscension = 0.0F;
 
-        
+        public Ring[] Rings { get; set; }
+
+        public bool OnDemand
+        {
+            get
+            {
+                return Demand;
+            }
+        }
+        public ScaledSpaceOnDemand Demand;
+
+        private bool Initialized = false;
 
         public BodyTypes Type;
 
@@ -36,10 +49,7 @@ namespace TiltUnlocker
         {
             get
             {
-                Vector3 rot = Vector3.up;
-                rot = Quaternion.Euler((float)Obliquity, 0.0F, 0.0F) * rot;
-                rot = Quaternion.Euler(0.0F, (float)RightAscension, 0.0F) * rot;
-                return rot;
+                return Quaternion.Euler((float)Obliquity, (float)RightAscension, 0.0F) * Vector3.up;
             }
         }
 
@@ -86,26 +96,48 @@ namespace TiltUnlocker
                 Destroy(this);
             }*/
 
+            List<Ring> rings = new List<Ring>();
+            foreach (Transform child in this.Body.scaledBody.transform)
+            {
+                Ring r = child.GetComponent<Ring>();
+                if (r) rings.Add(r);
+
+                
+
+                //Quaternion rot = //Quaternion.Euler(r.transform.rotation.x, r.transform.rotation.y, r.transform.rotation.z);
+            }
+            this.Rings = rings.ToArray();
+
+            
+
             DontDestroyOnLoad(sb);
 
             TiltManager.Bodies.Add(this);
         }
 
-        private static int MaterialSizes = 1;
-
         private void LateUpdate()
         {
+            GameScenes scene = HighLogic.LoadedScene;
+
+            if (scene != GameScenes.FLIGHT && scene != GameScenes.SPACECENTER && !MapView.MapIsEnabled) return;
+
+            if (this.Body == null) return;
+
             if (Type == BodyTypes.Rocky || RotationAxis == Vector3.up)
             {
                 return;
+            }
+
+            ScaledSpaceOnDemand ondemand = this.Body.scaledBody.GetComponent<ScaledSpaceOnDemand>();
+            if(ondemand != null)
+            {
+                ondemand.isLoaded = true;
             }
 
             float angle = -(float)this.Body.rotationAngle + 230.32F;
 
             GameObject sb = ScaledTiltedBody.gameObject;
 
-            if (OriginalScaledRenderer && OriginalScaledRenderer.enabled)
-                OriginalScaledRenderer.enabled = false;
 
             if(!ScaledBody)
             {
@@ -118,6 +150,28 @@ namespace TiltUnlocker
             sb.transform.up = this.RotationAxis;
             sb.transform.Rotate(Vector3.up, angle, Space.Self);
 
+            /*for (int i = 0; i < Rings.Length; i++)
+            {
+                Ring ring = Rings[i];
+                Transform t = ring.transform;
+
+
+
+                //Vector3 ringRot = ring.rotation * this.RotationAxis;
+                //t.up = ringRot;
+                //t.RotateAround(t.position, this.RotationAxis, ring.longitudeOfAscendingNode + 237.0221F);
+
+                //if (!ring.lockRotation)
+                //    t.RotateAround(t.position, this.RotationAxis, -(float)this.Body.rotationAngle);
+            }*/
+
+            //float ringRotationAngle = /* angle + */ 230.1789F;
+
+            //t.rotation = Quaternion.identity;
+            //Vector3 axis = Quaternion.Euler(0, ring.longitudeOfAscendingNode, 0) * this.RotationAxis;
+            //t.transform.up = axis;//Rotate()
+            //if(ring.rotation)
+            //}
             UpdateMaterials();
 
             
@@ -128,31 +182,59 @@ namespace TiltUnlocker
 
         private void UpdateMaterials()
         {
-            int sizeOriginal = OriginalScaledRenderer.sharedMaterials.Length;
-            int sizeTilted = ScaledTiltedMR.sharedMaterials.Length;
-
-            //Debug.Log("[Tilt] " + this.Body.name + " Original: " + OriginalScaledRenderer.sharedMaterials.Length + " / Tilted: "  + ScaledTiltedMR.sharedMaterials.Length);
-            if(
-                sizeOriginal != sizeTilted || 
-                (sizeOriginal > TiltManager.ScattererMaterialIndex && sizeTilted > TiltManager.ScattererMaterialIndex && OriginalScaledRenderer.sharedMaterials[TiltManager.ScattererMaterialIndex] != ScaledTiltedMR.sharedMaterials[TiltManager.ScattererMaterialIndex])
-                )
+            if (OriginalScaledRenderer && ScaledTiltedMR)
             {
-                ScaledTiltedMR.sharedMaterials = OriginalScaledRenderer.sharedMaterials;
+                int sizeOriginal = OriginalScaledRenderer.sharedMaterials.Length;
+                int sizeTilted = ScaledTiltedMR.sharedMaterials.Length;
+
+                if (
+                    sizeOriginal != sizeTilted ||
+                    (sizeOriginal > TiltManager.ScattererMaterialIndex && sizeTilted > TiltManager.ScattererMaterialIndex && OriginalScaledRenderer.sharedMaterials[TiltManager.ScattererMaterialIndex] != ScaledTiltedMR.sharedMaterials[TiltManager.ScattererMaterialIndex])
+                    )
+                {
+                    ScaledTiltedMR.sharedMaterials = OriginalScaledRenderer.sharedMaterials;
+                }
             }
         }
 
         private void OnSceneChange(Scene scene, LoadSceneMode mode)
         {
-            if(HighLogic.LoadedScene == GameScenes.MAINMENU)
+            if(!Initialized && HighLogic.LoadedScene == GameScenes.MAINMENU)
             {
                 MeshFilter mf = this.ScaledTiltedBody.AddComponent<MeshFilter>();
                 mf.sharedMesh = this.Body.scaledBody.GetComponent<MeshFilter>().sharedMesh;
 
                 ScaledTiltedMR = this.ScaledTiltedBody.AddComponent<MeshRenderer>();
                 OriginalScaledRenderer = this.Body.scaledBody.GetComponent<MeshRenderer>();
+
                 ScaledTiltedMR.sharedMaterials = OriginalScaledRenderer.sharedMaterials;
-                OriginalScaledRenderer.enabled = false;
+                ScaledSpaceOnDemand originalDemand = this.Body.scaledBody.GetComponent<ScaledSpaceOnDemand>();
+
+                if (originalDemand != null)
+                {
+                    Demand = this.ScaledTiltedBody.AddComponent<ScaledSpaceOnDemand>();
+
+                    Demand.texture = originalDemand.texture;
+                    Demand.normals = originalDemand.normals;
+                }
+
+                Destroy(originalDemand);
+
+                for (int i = 0; i < Rings.Length; i++)
+                {
+                    Rings[i].transform.SetParent(this.ScaledTiltedBody.transform);
+                    Vector3 rot = Rings[i].rotation.eulerAngles;
+                    Rings[i].rotation = Quaternion.Euler(rot.x, rot.y + Rings[i].longitudeOfAscendingNode * 2, rot.z);
+                    Rings[i].transform.localRotation = Rings[i].rotation;
+                }
+
+                this.Body.scaledBody.layer = 26;
             }
+        }
+
+        public void GlobalToLocalOrbit(Orbit orbit)
+        {
+
         }
     }
 }

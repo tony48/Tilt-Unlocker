@@ -36,10 +36,6 @@
       <HintPath>..\..\..\libs\1.8.1\Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Assembly-CSharp-firstpass">
-      <HintPath>..\..\..\libs\1.8.1\Assembly-CSharp-firstpass.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Kopernicus">
       <HintPath>..\..\..\libs\1.8.1\Kopernicus.dll</HintPath>
       <Private>False</Private>
@@ -87,7 +83,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BodyTypes.cs" />
-    <Compile Include="DebugDrawer.cs" />
     <Compile Include="TiltApp.cs" />
     <Compile Include="TiltedRenderHelper.cs" />
     <Compile Include="TiltManager.cs" />

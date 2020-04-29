@@ -146,18 +146,6 @@ namespace TiltUnlocker
             sb.transform.up = this.RotationAxis;
             sb.transform.Rotate(Vector3.up, angle, Space.Self);
 
-            for (int i = 0; i < Rings.Length; i++)
-            {
-                Ring ring = Rings[i];
-                Transform t = ring.transform;
-
-                //float ringRotationAngle = /* angle + */ 230.1789F;
-
-                //t.rotation = Quaternion.identity;
-                //Vector3 axis = Quaternion.Euler(0, ring.longitudeOfAscendingNode, 0) * this.RotationAxis;
-                //t.transform.up = axis;//Rotate()
-                //if(ring.rotation)
-            }
             UpdateMaterials();
 
             
@@ -206,7 +194,15 @@ namespace TiltUnlocker
 
                 Destroy(originalDemand);
 
-                this.Body.scaledBody.layer = 26; // move it to trash, aka WheelCollidersIgnore
+                for (int i = 0; i < Rings.Length; i++)
+                {
+                    Rings[i].transform.SetParent(this.ScaledTiltedBody.transform);
+                    Vector3 rot = Rings[i].rotation.eulerAngles;
+                    Rings[i].rotation = Quaternion.Euler(rot.x, rot.y + Rings[i].longitudeOfAscendingNode * 2, rot.z);
+                    Rings[i].transform.localRotation = Rings[i].rotation;
+                }
+
+                this.Body.scaledBody.layer = 26;
             }
         }
 
