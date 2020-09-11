@@ -1,10 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using Kopernicus;
 using Kopernicus.ConfigParser.Attributes;
 using Kopernicus.ConfigParser.BuiltinTypeParsers;
 using Kopernicus.ConfigParser.Interfaces;
+using Kopernicus.Configuration;
 using Kopernicus.Configuration.Parsing;
 using Kopernicus.UI;
+
 
 namespace TiltUnlocker
 {
@@ -38,6 +44,20 @@ namespace TiltUnlocker
             set
             {
                 Value.RightAscension = value;
+            }
+        }
+
+        [ParserTarget("rotateOrbits")]
+        public NumericParser<Boolean> rotateOrbits
+        {
+            get
+            {
+                return Value.RotateOrbits;
+            }
+
+            set
+            {
+                Value.RotateOrbits = value;
             }
         }
 

@@ -25,11 +25,13 @@ namespace TiltUnlocker
         public GameObject ScaledBody { get; private set; }
         private MeshRenderer OriginalScaledRenderer;
 
+        public Quaternion TiltedRotation { get; private set; }
+
         public CelestialBody Body { get; private set; }
 
         public Double Obliquity = 0.0F;
         public Double RightAscension = 0.0F;
-        public bool RotateOrbits = true;
+        public bool RotateOrbits = false;
 
         public Ring[] Rings { get; set; }
 
@@ -59,8 +61,6 @@ namespace TiltUnlocker
         private void Awake()
         {
             SceneManager.sceneLoaded += OnSceneChange;
-
-            //Camera.onPreCull += PreCull;
         }
 
 
@@ -97,30 +97,12 @@ namespace TiltUnlocker
                 Destroy(this);
             }*/
 
-            
-
             DontDestroyOnLoad(stb);
 
             TiltManager.Bodies.Add(this);
-
-            sw.Start();
         }
 
-        private void OnGUI()
-        {
-            if (this.Body.name != "Jool") return;
-            GUIStyle styleWindow = new GUIStyle(GUI.skin.window);
-            GUILayout.BeginVertical("Developper Mode", styleWindow);
-            GUILayout.Label("magicValue: " + magicValue.ToString("000"));
-            magicValue = GUILayout.HorizontalSlider(magicValue, 0, 90);
-            GUILayout.EndVertical();
-        }
-        float magicValue = 0;
-
-        System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-
-        bool moonInitialized = false;
-        private void LateUpdate()//PreCull(Camera sender)
+        private void LateUpdate()
         {
             GameScenes scene = HighLogic.LoadedScene;
 
@@ -147,24 +129,10 @@ namespace TiltUnlocker
 
             stb.transform.position = sb.transform.position;
 
+            //Make tilt correctly. The universe seems to be kerbinocentered, eh.
             stb.transform.up = _Kerbin.scaledBody.transform.TransformDirection(this.RotationAxis);
             stb.transform.Rotate(Vector3.up, (float)_Kerbin.rotationAngle, Space.World);
-
-            if(!moonInitialized)
-            {
-                moonInitialized = true;
-
-                if (this.RotateOrbits)
-                {
-                    Debug.Log("[TiltUnlocker] ROTATING MOONS ORBITS");
-                    foreach(CelestialBody moon in this.Body.orbitingBodies)
-                    {
-                        Debug.Log("[TiltUnlocker] " + moon.name);
-                        moon.orbit.Rotate(stb.transform.rotation);
-                    }
-                }
-            }
-
+            //Then *actually*, *finally* rotate it.
             stb.transform.Rotate(Vector3.up, -(float)_Kerbin.rotationAngle + sb.transform.rotation.eulerAngles.y, Space.Self);
 
             UpdateMaterials();
@@ -173,7 +141,6 @@ namespace TiltUnlocker
             dir = ScaledTiltedBody.transform.worldToLocalMatrix * dir;
             ScaledTiltedMR.sharedMaterials[TiltManager.StockMaterialIndex].SetVector("_localLightDirection", dir);
         }
-
 
         private void UpdateMaterials()
         {
@@ -192,10 +159,8 @@ namespace TiltUnlocker
             }
         }
 
-        
-
         private void OnSceneChange(Scene scene, LoadSceneMode mode)
-        {      
+        {     
             if(!Initialized && HighLogic.LoadedScene == GameScenes.MAINMENU)
             {
                 _Kerbin = FlightGlobals.Bodies.Find(cb => cb.name == "Kerbin");
@@ -237,8 +202,7 @@ namespace TiltUnlocker
                 }
 
                 this.ScaledBody.layer = 0;
-
-                
+                Initialized = true;
             }
         }
     }

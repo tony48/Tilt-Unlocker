@@ -28,16 +28,6 @@ namespace TiltUnlocker
 
             Instance = this;
             DontDestroyOnLoad(this);
-
-            SceneManager.sceneLoaded += OnSceneChange;
-        }
-
-        private void OnSceneChange(Scene scene, LoadSceneMode mode)
-        {
-            if(HighLogic.LoadedScene == GameScenes.FLIGHT || HighLogic.LoadedScene == GameScenes.TRACKSTATION)
-            {
-                Camera.main.gameObject.AddComponent<TiltedRenderHelper>();
-            }
         }
     }
 }

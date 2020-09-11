@@ -17,7 +17,7 @@ using UnityEngine.SceneManagement;
 
 namespace TiltUnlocker
 {
-    [DefaultExecutionOrder(100)]
+    [DefaultExecutionOrder(1000)]
     public class TiltedBody : MonoBehaviour
     {
         public GameObject ScaledTiltedBody { get; private set; }
@@ -25,12 +25,17 @@ namespace TiltUnlocker
         public GameObject ScaledBody { get; private set; }
         private MeshRenderer OriginalScaledRenderer;
 
+        public Quaternion TiltedRotation { get; private set; }
+
         public CelestialBody Body { get; private set; }
 
         public Double Obliquity = 0.0F;
         public Double RightAscension = 0.0F;
+        public bool RotateOrbits = false;
 
         public Ring[] Rings { get; set; }
+
+        private static CelestialBody _Kerbin;
 
         public bool OnDemand
         {
@@ -58,21 +63,17 @@ namespace TiltUnlocker
             SceneManager.sceneLoaded += OnSceneChange;
         }
 
+
         private void Start()
         {
             this.Body = gameObject.GetComponent<CelestialBody>();
 
             ScaledBody = this.Body.scaledBody;
-            GameObject sb = this.ScaledTiltedBody = new GameObject(this.Body.name + " Tilted");
-            sb.layer = GameLayers.SCALED_SPACE;
+            GameObject stb = this.ScaledTiltedBody = new GameObject(this.Body.name + " Tilted");
 
-            sb.transform.parent = ScaledBody.transform;
-            sb.transform.localScale = Vector3.one;
-            sb.transform.localPosition = Vector3.zero;
-            sb.transform.localRotation = Quaternion.identity;
+            stb.layer = GameLayers.SCALED_SPACE;
 
-
-            if(this.Body.pqsController)
+            if (this.Body.pqsController)
             {
                 Type = BodyTypes.Rocky;
             }
@@ -96,21 +97,7 @@ namespace TiltUnlocker
                 Destroy(this);
             }*/
 
-            List<Ring> rings = new List<Ring>();
-            foreach (Transform child in this.Body.scaledBody.transform)
-            {
-                Ring r = child.GetComponent<Ring>();
-                if (r) rings.Add(r);
-
-                
-
-                //Quaternion rot = //Quaternion.Euler(r.transform.rotation.x, r.transform.rotation.y, r.transform.rotation.z);
-            }
-            this.Rings = rings.ToArray();
-
-            
-
-            DontDestroyOnLoad(sb);
+            DontDestroyOnLoad(stb);
 
             TiltManager.Bodies.Add(this);
         }
@@ -123,22 +110,14 @@ namespace TiltUnlocker
 
             if (this.Body == null) return;
 
-            if (Type == BodyTypes.Rocky || RotationAxis == Vector3.up)
-            {
-                return;
-            }
-
             ScaledSpaceOnDemand ondemand = this.Body.scaledBody.GetComponent<ScaledSpaceOnDemand>();
             if(ondemand != null)
             {
                 ondemand.isLoaded = true;
             }
 
-            
-            float angle = -(float)this.Body.rotationAngle + 230.32F;
-
-            GameObject sb = ScaledTiltedBody.gameObject;
-
+            GameObject stb = ScaledTiltedBody.gameObject;
+            GameObject sb = ScaledBody.gameObject;
 
             if(!ScaledBody)
             {
@@ -146,40 +125,21 @@ namespace TiltUnlocker
 
                 if (!ScaledBody) return;
             }
-            
-            sb.transform.rotation = Quaternion.identity;
-            sb.transform.up = this.RotationAxis;
-            sb.transform.Rotate(Vector3.up, angle, Space.Self);
 
-            /*if(FlightGlobals.ActiveVessel != null && FlightGlobals.ActiveVessel.Landed)
-            {
-                sb.transform.Rotate(Vector3.up, -(float)FlightGlobals.ActiveVessel.mainBody.rotationAngle + angle, Space.World);
-            }*/
+
+            stb.transform.position = sb.transform.position;
+
+            //Make tilt correctly. The universe seems to be kerbinocentered, eh.
+            stb.transform.up = _Kerbin.scaledBody.transform.TransformDirection(this.RotationAxis);
+            stb.transform.Rotate(Vector3.up, (float)_Kerbin.rotationAngle, Space.World);
+            //Then *actually*, *finally* rotate it.
+            stb.transform.Rotate(Vector3.up, -(float)_Kerbin.rotationAngle + sb.transform.rotation.eulerAngles.y, Space.Self);
 
             UpdateMaterials();
 
-            
             Vector3 dir = (ScaledTiltedBody.transform.position - KopernicusStar.GetNearest(this.Body).sun.scaledBody.transform.position).normalized;
             dir = ScaledTiltedBody.transform.worldToLocalMatrix * dir;
             ScaledTiltedMR.sharedMaterials[TiltManager.StockMaterialIndex].SetVector("_localLightDirection", dir);
-        }
-
-        float Angle = 0;
-        private void OnGUI()
-        {
-            GUIStyle styleWindow = new GUIStyle(GUI.skin.window);
-            GUILayout.BeginVertical("Debug Tilt", styleWindow);
-            GUILayout.Label("");
-            GUILayout.Label("Added angle : " + Angle.ToString("C2"));
-            Angle = GUILayout.HorizontalSlider(Angle, 0, 90);
-            GUILayout.EndVertical();
-            /*WindowRect = GUI.Window(0, WindowRect, DrawWindow, "Tilt Unlocker");
-
-            
-
-            if(DebugMode)
-            {
-            }*/
         }
 
         private void UpdateMaterials()
@@ -200,9 +160,11 @@ namespace TiltUnlocker
         }
 
         private void OnSceneChange(Scene scene, LoadSceneMode mode)
-        {
+        {     
             if(!Initialized && HighLogic.LoadedScene == GameScenes.MAINMENU)
             {
+                _Kerbin = FlightGlobals.Bodies.Find(cb => cb.name == "Kerbin");
+
                 MeshFilter mf = this.ScaledTiltedBody.AddComponent<MeshFilter>();
                 mf.sharedMesh = this.Body.scaledBody.GetComponent<MeshFilter>().sharedMesh;
 
@@ -222,21 +184,26 @@ namespace TiltUnlocker
 
                 Destroy(originalDemand);
 
+                List<Ring> rings = new List<Ring>();
+                foreach (Transform child in ScaledBody.transform)
+                {
+                    Ring r = child.GetComponent<Ring>();
+                    if (r) rings.Add(r);
+                }
+                this.Rings = rings.ToArray();
+
                 for (int i = 0; i < Rings.Length; i++)
                 {
                     Rings[i].transform.SetParent(this.ScaledTiltedBody.transform);
+                    Rings[i].transform.localPosition = Vector3.zero;
                     Vector3 rot = Rings[i].rotation.eulerAngles;
                     Rings[i].rotation = Quaternion.Euler(rot.x, rot.y + Rings[i].longitudeOfAscendingNode * 2, rot.z);
                     Rings[i].transform.localRotation = Rings[i].rotation;
                 }
 
-                this.Body.scaledBody.layer = 26;
+                this.ScaledBody.layer = 0;
+                Initialized = true;
             }
-        }
-
-        public void GlobalToLocalOrbit(Orbit orbit)
-        {
-
         }
     }
 }
