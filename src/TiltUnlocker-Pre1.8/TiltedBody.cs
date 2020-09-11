@@ -134,6 +134,7 @@ namespace TiltUnlocker
                 ondemand.isLoaded = true;
             }
 
+            
             float angle = -(float)this.Body.rotationAngle + 230.32F;
 
             GameObject sb = ScaledTiltedBody.gameObject;
@@ -150,34 +151,35 @@ namespace TiltUnlocker
             sb.transform.up = this.RotationAxis;
             sb.transform.Rotate(Vector3.up, angle, Space.Self);
 
-            /*for (int i = 0; i < Rings.Length; i++)
+            /*if(FlightGlobals.ActiveVessel != null && FlightGlobals.ActiveVessel.Landed)
             {
-                Ring ring = Rings[i];
-                Transform t = ring.transform;
-
-
-
-                //Vector3 ringRot = ring.rotation * this.RotationAxis;
-                //t.up = ringRot;
-                //t.RotateAround(t.position, this.RotationAxis, ring.longitudeOfAscendingNode + 237.0221F);
-
-                //if (!ring.lockRotation)
-                //    t.RotateAround(t.position, this.RotationAxis, -(float)this.Body.rotationAngle);
+                sb.transform.Rotate(Vector3.up, -(float)FlightGlobals.ActiveVessel.mainBody.rotationAngle + angle, Space.World);
             }*/
 
-            //float ringRotationAngle = /* angle + */ 230.1789F;
-
-            //t.rotation = Quaternion.identity;
-            //Vector3 axis = Quaternion.Euler(0, ring.longitudeOfAscendingNode, 0) * this.RotationAxis;
-            //t.transform.up = axis;//Rotate()
-            //if(ring.rotation)
-            //}
             UpdateMaterials();
 
             
             Vector3 dir = (ScaledTiltedBody.transform.position - KopernicusStar.GetNearest(this.Body).sun.scaledBody.transform.position).normalized;
             dir = ScaledTiltedBody.transform.worldToLocalMatrix * dir;
             ScaledTiltedMR.sharedMaterials[TiltManager.StockMaterialIndex].SetVector("_localLightDirection", dir);
+        }
+
+        float Angle = 0;
+        private void OnGUI()
+        {
+            GUIStyle styleWindow = new GUIStyle(GUI.skin.window);
+            GUILayout.BeginVertical("Debug Tilt", styleWindow);
+            GUILayout.Label("");
+            GUILayout.Label("Added angle : " + Angle.ToString("C2"));
+            Angle = GUILayout.HorizontalSlider(Angle, 0, 90);
+            GUILayout.EndVertical();
+            /*WindowRect = GUI.Window(0, WindowRect, DrawWindow, "Tilt Unlocker");
+
+            
+
+            if(DebugMode)
+            {
+            }*/
         }
 
         private void UpdateMaterials()

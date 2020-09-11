@@ -77,11 +77,15 @@ namespace TiltUnlocker
         //private VectorLine AxisLine;
         private Material DebugMaterial;
 
+        private string BodyName = "Jool";
+
         private void OnGUI()
         {
             if (!WindowEnabled) return;
 
             WindowRect = GUI.Window(0, WindowRect, DrawWindow, "Tilt Unlocker");
+
+            
 
             if(DebugMode)
             {
@@ -92,6 +96,8 @@ namespace TiltUnlocker
         {
             DebugMode = GUI.Toggle(new Rect(10, 20, 100, 20), DebugMode, "Debug");
             GUI.DragWindow();
+
+            BodyName = GUI.TextField(new Rect(10, 40, 100, 20), BodyName);
         }
     }
 }

@@ -47,6 +47,20 @@ namespace TiltUnlocker
             }
         }
 
+        [ParserTarget("rotateOrbits")]
+        public NumericParser<Boolean> rotateOrbits
+        {
+            get
+            {
+                return Value.RotateOrbits;
+            }
+
+            set
+            {
+                Value.RotateOrbits = value;
+            }
+        }
+
         public TiltBodyLoader()
         {
             if (!Injector.IsInPrefab)

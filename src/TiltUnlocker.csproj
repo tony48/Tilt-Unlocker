@@ -83,6 +83,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BodyTypes.cs" />
+    <Compile Include="OrbitUtilities.cs" />
     <Compile Include="TiltApp.cs" />
     <Compile Include="TiltedRenderHelper.cs" />
     <Compile Include="TiltManager.cs" />
