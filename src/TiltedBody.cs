@@ -14,6 +14,7 @@ using Kopernicus.RuntimeUtility;
 using Kopernicus.OnDemand;
 
 using UnityEngine.SceneManagement;
+using ModularFI;
 
 namespace TiltUnlocker
 {
@@ -71,12 +72,21 @@ namespace TiltUnlocker
             this.Body = gameObject.GetComponent<CelestialBody>();
 
             ScaledBody = this.Body.scaledBody;
-            Destroy(ScaledBody.GetComponent<Collider>());
 
             GameObject stb = this.ScaledTiltedBody = new GameObject(this.Body.name + " Tilted");
             stb.transform.parent = this.Body.scaledBody.transform.parent;
-            SunBlocker = stb.AddComponent<SphereCollider>();
-            SunBlocker.radius = 1000.0F;
+
+            if (this.Type != BodyTypes.Star)
+            {
+                Collider baseCollider = ScaledBody.GetComponent<Collider>();
+                
+                SunBlocker = stb.AddComponent<SphereCollider>();
+                SunBlocker.sharedMaterial = baseCollider.sharedMaterial;
+                SunBlocker.radius = 1000.0F;
+
+                Destroy(baseCollider);
+            }
+
             stb.transform.localScale = ScaledBody.transform.localScale;
             stb.layer = GameLayers.SCALED_SPACE;
 
