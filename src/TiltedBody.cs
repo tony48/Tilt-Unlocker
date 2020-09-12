@@ -70,7 +70,7 @@ namespace TiltUnlocker
 
             ScaledBody = this.Body.scaledBody;
             GameObject stb = this.ScaledTiltedBody = new GameObject(this.Body.name + " Tilted");
-
+            stb.transform.localScale = ScaledBody.transform.localScale;
             stb.layer = GameLayers.SCALED_SPACE;
 
             if (this.Body.pqsController)
