@@ -72,6 +72,10 @@
       <HintPath>..\..\..\libs\Unity 2019\UnityEngine.InputLegacyModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>..\..\..\libs\Unity 2019\UnityEngine.PhysicsModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>..\..\..\libs\Unity 2019\UnityEngine.UI.dll</HintPath>
       <Private>False</Private>

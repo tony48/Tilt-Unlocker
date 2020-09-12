@@ -25,6 +25,8 @@ namespace TiltUnlocker
         public GameObject ScaledBody { get; private set; }
         private MeshRenderer OriginalScaledRenderer;
 
+        public SphereCollider SunBlocker { get; private set; }
+
         public Quaternion TiltedRotation { get; private set; }
 
         public CelestialBody Body { get; private set; }
@@ -69,7 +71,12 @@ namespace TiltUnlocker
             this.Body = gameObject.GetComponent<CelestialBody>();
 
             ScaledBody = this.Body.scaledBody;
+            Destroy(ScaledBody.GetComponent<Collider>());
+
             GameObject stb = this.ScaledTiltedBody = new GameObject(this.Body.name + " Tilted");
+            stb.transform.parent = this.Body.scaledBody.transform.parent;
+            SunBlocker = stb.AddComponent<SphereCollider>();
+            SunBlocker.radius = 1000.0F;
             stb.transform.localScale = ScaledBody.transform.localScale;
             stb.layer = GameLayers.SCALED_SPACE;
 
@@ -140,6 +147,8 @@ namespace TiltUnlocker
             Vector3 dir = (ScaledTiltedBody.transform.position - KopernicusStar.GetNearest(this.Body).sun.scaledBody.transform.position).normalized;
             dir = ScaledTiltedBody.transform.worldToLocalMatrix * dir;
             ScaledTiltedMR.sharedMaterials[TiltManager.StockMaterialIndex].SetVector("_localLightDirection", dir);
+
+            
         }
 
         private void UpdateMaterials()
@@ -201,7 +210,7 @@ namespace TiltUnlocker
                     Rings[i].transform.localRotation = Rings[i].rotation;
                 }
 
-                this.ScaledBody.layer = 0;
+                this.ScaledBody.layer = 26;
                 Initialized = true;
             }
         }
