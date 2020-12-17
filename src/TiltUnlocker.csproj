@@ -44,7 +44,7 @@
       <HintPath>..\..\..\libs\1.8.1\Kopernicus.Parser.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="ModularFlightIntegrator">
+    <Reference Include="ModularFlightIntegrator, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\..\..\libs\1.8.1\ModularFlightIntegrator.dll</HintPath>
       <Private>False</Private>
     </Reference>
@@ -91,10 +91,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BodyTypes.cs" />
+    <Compile Include="OrbitHelper.cs" />
     <Compile Include="TiltManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TiltedBody.cs" />
     <Compile Include="TiltBodyLoader.cs" />
+    <Compile Include="Version.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

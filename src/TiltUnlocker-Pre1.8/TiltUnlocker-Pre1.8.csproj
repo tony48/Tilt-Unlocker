@@ -43,6 +43,10 @@
       <HintPath>..\..\..\..\libs\1.7.3\Kopernicus.Parser.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="ModularFlightIntegrator, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\..\..\..\libs\1.7.3\ModularFlightIntegrator.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />

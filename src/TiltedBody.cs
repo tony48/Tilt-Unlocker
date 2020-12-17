@@ -25,6 +25,10 @@ namespace TiltUnlocker
         public MeshRenderer ScaledTiltedMR;
         public GameObject ScaledBody { get; private set; }
         private MeshRenderer OriginalScaledRenderer;
+        
+        public GameObject NewScattererObject { get; private set; }
+        public MeshRenderer NewScattererObjectMR { get; private set; }
+        public MeshFilter NewScattererObjectMF { get; private set; }
 
         public SphereCollider SunBlocker { get; private set; }
 
@@ -38,7 +42,7 @@ namespace TiltUnlocker
 
         public Ring[] Rings { get; set; }
 
-        private static CelestialBody _Kerbin;
+        private static CelestialBody _Kerbin { get; set; }
 
         public bool OnDemand
         {
@@ -163,18 +167,92 @@ namespace TiltUnlocker
 
         private void UpdateMaterials()
         {
-            if (OriginalScaledRenderer && ScaledTiltedMR)
+            if (TiltManager.ScattererInstalled)
             {
-                int sizeOriginal = OriginalScaledRenderer.sharedMaterials.Length;
-                int sizeTilted = ScaledTiltedMR.sharedMaterials.Length;
-
-                if (
-                    sizeOriginal != sizeTilted ||
-                    (sizeOriginal > TiltManager.ScattererMaterialIndex && sizeTilted > TiltManager.ScattererMaterialIndex && OriginalScaledRenderer.sharedMaterials[TiltManager.ScattererMaterialIndex] != ScaledTiltedMR.sharedMaterials[TiltManager.ScattererMaterialIndex])
-                    )
+                if (OriginalScaledRenderer && ScaledTiltedMR)
                 {
-                    ScaledTiltedMR.sharedMaterials = OriginalScaledRenderer.sharedMaterials;
+                    int sizeOriginal = OriginalScaledRenderer.sharedMaterials.Length;
+                    int sizeTilted = ScaledTiltedMR.sharedMaterials.Length;
+
+                    if ( // scatterer in loading range and old version.
+                        TiltManager.ScattererVersion != TiltManager.NewScattererVersion &&
+                        sizeOriginal != sizeTilted ||
+                        (sizeOriginal > TiltManager.ScattererMaterialIndex &&
+                         sizeTilted > TiltManager.ScattererMaterialIndex &&
+                         OriginalScaledRenderer.sharedMaterials[TiltManager.ScattererMaterialIndex] !=
+                         ScaledTiltedMR.sharedMaterials[TiltManager.ScattererMaterialIndex])
+                    )
+                    {
+                        if (TiltManager.ScattererVersion.Minor == 0)
+                            TiltManager.ScattererVersion = TiltManager.OldScattererVersion;
+                        ScaledTiltedMR.sharedMaterials = OriginalScaledRenderer.sharedMaterials;
+                    }
+                    else if (NewScattererObject != null) // new scatterer object already found, keep track of it and change it if needed
+                    {
+                        bool isInScaledSpace = NewScattererObject.transform.parent == ScaledBody.transform;
+
+                        SetNewScattererState(isInScaledSpace);
+                    }
+                    else if(TiltManager.ScattererVersion != TiltManager.OldScattererVersion) // either not in loading range or new version.
+                    {
+                        // new scatterer includes a "New GameObject" (lol) child to the original MR
+                        // as the new atmosphere mesh / material. This gameobject moves from local
+                        // to scaled space depending of the situation.
+
+                        GameObject potentialAtmoObject = null;
+                        bool foundObject = false;
+                        
+                        
+                        foreach (Transform child in ScaledBody.transform)
+                            if (child.name == "New Game Object")
+                            {
+                                potentialAtmoObject = child.gameObject;
+                                foundObject = true;
+                                break;
+                            }
+
+                        if (foundObject)
+                        {
+                            MeshRenderer scatmr = potentialAtmoObject.GetComponent<MeshRenderer>();
+
+                            if (scatmr != null)
+                            { // scatterer object
+                                if (TiltManager.ScattererVersion.Minor == 0)
+                                    TiltManager.ScattererVersion = TiltManager.NewScattererVersion;
+                                
+                                NewScattererObject = potentialAtmoObject;
+                                NewScattererObjectMR = scatmr;
+                                NewScattererObjectMF = potentialAtmoObject.GetComponent<MeshFilter>();
+
+                                SetNewScattererState(true);
+                                //potentialAtmoObject.SetActive(false);
+                            }
+                        }
+                    }
                 }
+            }
+        }
+
+        private void SetNewScattererState(bool scaled)
+        {
+            if (scaled)
+            {
+                ScaledTiltedMR.sharedMaterials = new []
+                {
+                    ScaledTiltedMR.sharedMaterials[0],
+                    NewScattererObjectMR.sharedMaterials[0]
+                };
+
+                NewScattererObjectMR.enabled = false;
+            }
+            else
+            {
+                ScaledTiltedMR.sharedMaterials = new[]
+                {
+                    ScaledTiltedMR.sharedMaterials[0]
+                };
+                
+                NewScattererObjectMR.enabled = true;
             }
         }
 
@@ -182,8 +260,8 @@ namespace TiltUnlocker
         {     
             if(!Initialized && HighLogic.LoadedScene == GameScenes.MAINMENU)
             {
-                _Kerbin = FlightGlobals.Bodies.Find(cb => cb.name == "Kerbin");
-
+                _Kerbin = FlightGlobals.GetHomeBody();//FlightGlobals.Bodies.Find(cb => cb.isHomeWorld == "Kerbin");
+                
                 MeshFilter mf = this.ScaledTiltedBody.AddComponent<MeshFilter>();
                 mf.sharedMesh = this.Body.scaledBody.GetComponent<MeshFilter>().sharedMesh;
 
