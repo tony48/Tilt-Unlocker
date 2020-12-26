@@ -225,7 +225,6 @@ namespace TiltUnlocker
                                 NewScattererObjectMF = potentialAtmoObject.GetComponent<MeshFilter>();
 
                                 SetNewScattererState(true);
-                                //potentialAtmoObject.SetActive(false);
                             }
                         }
                     }
