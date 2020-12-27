@@ -8,12 +8,7 @@ The mod requires the corresponding version of Kopernicus as your game as and is 
 
 ### Installation
 
-Download the last version corresponding to your game version such as
-
-* TiltUnlocker_v0.1-1.8.1 for the 1.8.1 version
-* TiltUnlocker_v0.1-1.7.3 for the 1.7.3 version
-
-and *extract* the **content** of the GameData/ folder into your KSP GameData/
+Download the last version corresponding to your game version and *extract* the **content** of the GameData/ folder into your KSP GameData/
 
 Don't forget to install the last corresponding Kopernicus version [here](https://github.com/Kopernicus/Kopernicus/releases)
  
