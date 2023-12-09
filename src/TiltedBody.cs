@@ -1,20 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
-using Kopernicus;
 using Kopernicus.Components;
-using Kopernicus.Configuration;
 using Kopernicus.Constants;
 using Kopernicus.RuntimeUtility;
 
 using Kopernicus.OnDemand;
 
 using UnityEngine.SceneManagement;
-using ModularFI;
 
 namespace TiltUnlocker
 {
@@ -158,7 +152,7 @@ namespace TiltUnlocker
 
             UpdateMaterials();
 
-            Vector3 dir = (ScaledTiltedBody.transform.position - KopernicusStar.GetNearest(this.Body).sun.scaledBody.transform.position).normalized;
+            Vector3 dir = (ScaledTiltedBody.transform.position - KopernicusStar.GetBrightest(this.Body).sun.scaledBody.transform.position).normalized;
             dir = ScaledTiltedBody.transform.worldToLocalMatrix * dir;
             ScaledTiltedMR.sharedMaterials[TiltManager.StockMaterialIndex].SetVector("_localLightDirection", dir);
 
@@ -173,29 +167,16 @@ namespace TiltUnlocker
                 {
                     int sizeOriginal = OriginalScaledRenderer.sharedMaterials.Length;
                     int sizeTilted = ScaledTiltedMR.sharedMaterials.Length;
-
-                    if ( // scatterer in loading range and old version.
-                        TiltManager.ScattererVersion != TiltManager.NewScattererVersion &&
-                        sizeOriginal != sizeTilted ||
-                        (sizeOriginal > TiltManager.ScattererMaterialIndex &&
-                         sizeTilted > TiltManager.ScattererMaterialIndex &&
-                         OriginalScaledRenderer.sharedMaterials[TiltManager.ScattererMaterialIndex] !=
-                         ScaledTiltedMR.sharedMaterials[TiltManager.ScattererMaterialIndex])
-                    )
-                    {
-                        if (TiltManager.ScattererVersion.Minor == 0)
-                            TiltManager.ScattererVersion = TiltManager.OldScattererVersion;
-                        ScaledTiltedMR.sharedMaterials = OriginalScaledRenderer.sharedMaterials;
-                    }
-                    else if (NewScattererObject != null) // new scatterer object already found, keep track of it and change it if needed
+                    
+                    if (NewScattererObject != null) // new scatterer object already found, keep track of it and change it if needed
                     {
                         bool isInScaledSpace = NewScattererObject.transform.parent == ScaledBody.transform;
 
                         SetNewScattererState(isInScaledSpace);
                     }
-                    else if(TiltManager.ScattererVersion != TiltManager.OldScattererVersion) // either not in loading range or new version.
+                    else
                     {
-                        // new scatterer includes a "New GameObject" (lol) child to the original MR
+                        // new scatterer includes a "Scatterer scaled atmo" child to the original MR
                         // as the new atmosphere mesh / material. This gameobject moves from local
                         // to scaled space depending of the situation.
 
@@ -204,7 +185,7 @@ namespace TiltUnlocker
                         
                         
                         foreach (Transform child in ScaledBody.transform)
-                            if (child.name == "New Game Object")
+                            if (child.name == "Scatterer scaled atmo")
                             {
                                 potentialAtmoObject = child.gameObject;
                                 foundObject = true;
@@ -217,9 +198,6 @@ namespace TiltUnlocker
 
                             if (scatmr != null)
                             { // scatterer object
-                                if (TiltManager.ScattererVersion.Minor == 0)
-                                    TiltManager.ScattererVersion = TiltManager.NewScattererVersion;
-                                
                                 NewScattererObject = potentialAtmoObject;
                                 NewScattererObjectMR = scatmr;
                                 NewScattererObjectMF = potentialAtmoObject.GetComponent<MeshFilter>();
